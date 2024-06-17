@@ -1,0 +1,16 @@
+{
+  "name": "Couverture Pronote",
+  "description": "Calcule le taux de cours non remplacés de votre enfent",
+  "version": "1.0",
+  "manifest_version": 3,
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "pronote-favicon.png"
+  },
+  "content_scripts": [
+   {
+     "matches": ["https://*.index-education.net/*"],
+     "js": ["content.js"]
+   }
+ ]
+}
