@@ -1,6 +1,6 @@
 {
-  "name": "Couverture Pronote",
-  "description": "Calcule le taux de cours non remplacés de votre enfant",
+  "name": "Couverture Pronote BETA",
+  "description": "Calcule le taux de cours non remplacés de votre enfant. THIS EXTENSION IS FOR BÊTA TESTING",
   "version": "1.0",
   "manifest_version": 3,
   "action": {

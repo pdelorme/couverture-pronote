@@ -17,8 +17,36 @@ refreshButton.addEventListener(
   "click", () => refresh(), false);
 
 function matieresDataToTable(matiereJson){
+	labelsCount = 0;
+	labels = {};
+	// construit la table des colonnes?
+	for (var matiereKey in matiereJson) {
+   	if (matiereJson.hasOwnProperty(matiereKey)) {
+   		labelsJson = matiereJson[matiereKey];
+   		for(var labelKey in labelsJson){
+   			if (labelsJson.hasOwnProperty(labelKey)) {
+   				if(!labels[labelKey]){
+   					labels[labelKey]=labelsCount++;
+   				}
+   			}
+   		}
+   	}
+ 	}
 	tableDiv = document.querySelector("#results-table");
+	
 	const tableElement = document.createElement("table");
+	// header
+	headerElement = document.createElement("tr");
+  tableElement.appendChild(headerElement);
+  thElement = document.createElement("th");
+  headerElement.appendChild(thElement);
+	for(var label in labels){
+		thElement = document.createElement("th");
+   	headerElement.appendChild(thElement);
+   	labelElement = document.createTextNode(label);
+   	thElement.appendChild(labelElement);
+	}
+	// rows
 	for (var key in matiereJson) {
    if (matiereJson.hasOwnProperty(key)) {
    	 	trElement = document.createElement("tr");
@@ -27,10 +55,17 @@ function matieresDataToTable(matiereJson){
    	 	trElement.appendChild(td1Element);
    	 	labelElement = document.createTextNode(key);
    	 	td1Element.appendChild(labelElement);
-   	 	td2Element = document.createElement("td");
-   	 	trElement.appendChild(td2Element);
-   	 	valueElement = document.createTextNode(JSON.stringify(matiereJson[key]));
-   	 	td2Element.appendChild(valueElement);
+   	 	
+   	 	matiereLabels = matiereJson[key];
+   	 	for(var label in labels){
+   	 		td2Element = document.createElement("td");
+   	 		trElement.appendChild(td2Element);
+   	 		if(matiereLabels[label]){
+   	 			valueElement = document.createTextNode(matiereLabels[label]);
+   	 			td2Element.appendChild(valueElement);
+   	 		}
+   	 	}
+   	 	
 		}
 	}
 	tableDiv.appendChild(tableElement);

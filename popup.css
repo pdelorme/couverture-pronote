@@ -1,0 +1,24 @@
+th,
+td {
+  border: 1px solid rgb(160 160 160);
+  padding: 4px 4px;
+}
+
+th[scope="col"] {
+  background-color: #505050;
+  color: #fff;
+}
+
+th[scope="row"] {
+  background-color: #d6ecd4;
+}
+
+tr:nth-of-type(odd) td {
+  background-color: #eee;
+}
+
+table {
+  font-size: 75%;
+  text-align: center;
+  border-collapse: collapse;
+}
