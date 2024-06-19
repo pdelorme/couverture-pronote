@@ -3,7 +3,11 @@ console.log("Hello Pronote !");
 chrome.runtime.onMessage.addListener(
   function(request, sender, sendResponse) {
   	console.log("Update stats");
-    sendResponse(getEDTAnnée());
+  	(async () => {
+	  	matieresData = await getEDTAnnée();
+	    sendResponse(matieresData);
+	  })();
+	  return true;
   }
 );
 
@@ -101,7 +105,10 @@ async function getEDTAnnée(){
 	splitIndex = eleveString.lastIndexOf("(");
 	name = eleveString.substring(eleveString,splitIndex-1);
 	classe = eleveString.substring(splitIndex+1,eleveString.length-1);
-	var matieresData = {};
+	matieresData = JSON.parse(localStorage.getItem('matieresData'));
+	if(matieresData==null){
+			matieresData = {};
+	}
 	// loop sur l'EDT du jour.
 	isDébutAnnée = false;
 	stopDate = new Date(Date.now()-3*1000*60*60*24);
@@ -139,7 +146,8 @@ async function getEDTAnnée(){
 			await delay(1000);
 		}
 	}
-	console.log(matieresData);
+	localStorage.setItem('matieresData', JSON.stringify(matieresData));
+	return matieresData;
 }
 /*
 document.addEventListener('readystatechange', () => {    
