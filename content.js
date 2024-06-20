@@ -147,18 +147,20 @@ async function getEDTAnnée(){
 	//if(!coverageData){ coverageData={}; }
 	//matieresData = coverageData['matieresData'];
 	//if(matieresData==null){ matieresData = {}; }
-	lastDate = new Date(Date.now());
+	lastDate = null;
 	coverageData={};
 	matieresData = {};
 	// loop sur l'EDT du jour.
 	isDébutAnnée = false;
-	stopDate = new Date(Date.now()-3*1000*60*60*24);
-	prevDate="";
+	// stopDate = new Date(Date.now()-3*1000*60*60*24);
+	prevDate = null;
 	while(!isDébutAnnée){
 		// date
 		dateString = edtNode.querySelector(".ObjetCelluleDate .ocb_cont .ocb-libelle").textContent;
 		date = pronoteToLocalDate(dateString);
-		if(prevDate==date){
+		if(lastDate==null)
+			lastDate=date;
+		if(prevDate-date==0){
 			// si la date n'à pas changée, on à terminé.
 			isDébutAnnée = true
 		} else {		
@@ -170,13 +172,12 @@ async function getEDTAnnée(){
 			// prevDay
 			prevButton = document.querySelector("#id_body .emploidutemps .ObjetCelluleDate .icon_angle_left");
 			prevButton.dispatchEvent(new Event("click"));
-			await delay(1000);
+			await delay(500);
 		}
 	}
 	coverageData["matieresData"] = matieresData;
-	coverageData["firstDate"] = firstDate;
-	covergaeData["lastDate"] = lastDate;
-	localStorage.setItem('coverageData', JSON.stringify(coverageData));
+	coverageData["startDate"] = date;
+	coverageData["endDate"] = lastDate;
 	return coverageData;
 }
 /*

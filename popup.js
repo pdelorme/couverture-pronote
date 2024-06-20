@@ -1,53 +1,68 @@
 console.log('This is an other popup!');
+displayCoverageData();
 
-function displayResult(res){
-	console.log("result :", res);
-	displayCoverageData(res);
+function displayResult(coverageData){
+    localStorage.setItem('coverageData', JSON.stringify(coverageData));
+	displayCoverageData();
 }
 async function refresh(){
 	const [tab] = await chrome.tabs.query({active: true, lastFocusedWindow: true});
 	// const response = await chrome.tabs.sendMessage(tab.id, {greeting: "hello"});
 	chrome.tabs.sendMessage(tab.id, {"message":"hello"}).then(res => displayResult(res));
-	// do something with response here, not outside the function
-	console.log(response);
+}
+
+function replaceElementText(selector, text){
+    replaceElementChild(selector, document.createTextNode(text));
+}
+function replaceElementChild(selector, child){
+    element = document.querySelector(selector)
+    if(!element){
+        console.log("element does not exist :" + selector);
+        return;
+    }
+    while (element.firstChild) {
+        element.removeChild(element.firstChild);
+    }
+    element.appendChild(child);
 }
 
 var refreshButton = document.getElementById("refreshButton");
 refreshButton.addEventListener(
   "click", () => refresh(), false);
 
-function displayCoverageData(matiereJson){
+function displayCoverageData(){
+    coverageData = JSON.parse(localStorage.getItem('coverageData'));
+    if(!coverageData){
+        return;
+    }
+    matieresData=coverageData["matieresData"];
 	labelsCount = 0;
 	labels = {};
 	// construit la table des colonnes?
-	for (var matiereKey in matiereJson) {
-   	if (matiereJson.hasOwnProperty(matiereKey)) {
-   		labelsJson = matiereJson[matiereKey];
-   		for(var labelKey in labelsJson){
-   			if (labelsJson.hasOwnProperty(labelKey)) {
-   				if(!labels[labelKey]){
-   					labels[labelKey]=labelsCount++;
-   				}
-   			}
-   		}
-   	}
+	for (var matiereKey in matieresData) {
+        if (matieresData.hasOwnProperty(matiereKey)) {
+            labelsJson = matieresData[matiereKey];
+            for(var labelKey in labelsJson){
+                if (labelsJson.hasOwnProperty(labelKey)) {
+                    if(!labels[labelKey]){
+                        labels[labelKey]=labelsCount++;
+                    }
+                }
+            }
+        }
  	}
- 	startDiv = document.querySelector("#results-start");
- 	sendDiv = document.querySelector("#results-end");
-	tableDiv = document.querySelector("#results-table");
-	// détruit la table existante.
-	innerTable = tableDiv.querySelector("table")
-	if(innerTable){
-		innerTable.remove();
-	}
+ 	replaceElementText("span#results_start", new Date(coverageData["startDate"]).toLocaleDateString());
+    replaceElementText("span#results_end", new Date(coverageData["endDate"]).toLocaleDateString());
 
 	// ajoute la table.
-	const tableElement = document.createElement("table");
+	tableElement = document.createElement("table");
+    replaceElementChild("#results_table", tableElement);
+
 	// header
 	headerElement = document.createElement("tr");
-  tableElement.appendChild(headerElement);
-  thElement = document.createElement("th");
-  headerElement.appendChild(thElement);
+    tableElement.appendChild(headerElement);
+    thElement = document.createElement("th");
+    headerElement.appendChild(thElement);
 	for(var label in labels){
 		thElement = document.createElement("th");
    	headerElement.appendChild(thElement);
@@ -55,28 +70,27 @@ function displayCoverageData(matiereJson){
    	thElement.appendChild(labelElement);
 	}
 	// rows
-	for (var key in matiereJson) {
-   if (matiereJson.hasOwnProperty(key)) {
-   	 	trElement = document.createElement("tr");
-   	 	tableElement.appendChild(trElement);
-   	 	td1Element = document.createElement("td");
-   	 	trElement.appendChild(td1Element);
-   	 	labelElement = document.createTextNode(key);
-   	 	td1Element.appendChild(labelElement);
-   	 	
-   	 	matiereLabels = matiereJson[key];
-   	 	for(var label in labels){
-   	 		td2Element = document.createElement("td");
-   	 		trElement.appendChild(td2Element);
-   	 		if(matiereLabels[label]){
-   	 			valueElement = document.createTextNode(matiereLabels[label]);
-   	 			td2Element.appendChild(valueElement);
-   	 		}
-   	 	}
+	for (var key in matieresData) {
+        if (matieresData.hasOwnProperty(key)) {
+            trElement = document.createElement("tr");
+            tableElement.appendChild(trElement);
+            td1Element = document.createElement("td");
+            trElement.appendChild(td1Element);
+            labelElement = document.createTextNode(key);
+            td1Element.appendChild(labelElement);
+            
+            matiereLabels = matieresData[key];
+            for(var label in labels){
+                td2Element = document.createElement("td");
+                trElement.appendChild(td2Element);
+                if(matiereLabels[label]){
+                    valueElement = document.createTextNode(matiereLabels[label]);
+                    td2Element.appendChild(valueElement);
+                }
+            }
    	 	
 		}
 	}
-	tableDiv.appendChild(tableElement);
 }
 
 /*
