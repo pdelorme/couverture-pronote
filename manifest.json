@@ -3,6 +3,9 @@
   "description": "Calcule le taux de cours non remplacés de votre enfant. THIS EXTENSION IS FOR BÊTA TESTING",
   "version": "1.0",
   "manifest_version": 3,
+  "icons":{
+    "128":"128.png"
+  },
   "action": {
     "default_popup": "popup.html",
     "default_icon": "pronote-favicon.png"
