@@ -4,8 +4,8 @@ chrome.runtime.onMessage.addListener(
   function(request, sender, sendResponse) {
   	console.log("Update stats");
   	(async () => {
-	  	matieresData = await getEDTAnnée();
-	    sendResponse(matieresData);
+	  	coverageData = await getEDTAnnée();
+	    sendResponse(coverageData);
 	  })();
 	  return true;
   }
@@ -38,6 +38,44 @@ function postEDTJson(jsonEDTData){
 	    "Content-type": "application/json; charset=UTF-8"
 	  }
 	});
+}
+
+const monthMap = {
+	"janv."	:0,
+	"févr."	:1,
+	"mars"	:2,
+	"avr."  :3,
+	"mai"		:4,
+	"juin"	:5,
+	"juil."	:6,
+	"août"	:7,
+	"sept."	:8,
+	"oct."  :9,
+	"nov."	:10,
+	"déc."	:11
+}
+/**
+ * return date from pronoteDate
+ */
+function pronoteToLocalDate(pronoteDate){
+	if(pronoteDate=="Demain"){
+		return new Date(Date.now() + 1000*60*60*24);
+	}
+	if(pronoteDate=="Aujourd'hui"){
+		return new Date(Date.now());
+	}
+	if(pronoteDate=="Hier"){
+		return new Date(Date.now() - 1000*60*60*24);
+	}
+	datePart = pronoteDate.split(String.fromCharCode(160));
+	day = datePart[1];
+	month = monthMap[datePart[2]];
+	year = new Date(Date.now()).getFullYear();
+	if(month>7) {
+		year = year - 1 
+	}
+	date = new Date(year, month, day);
+	return date;
 }
 
 /**
@@ -105,49 +143,41 @@ async function getEDTAnnée(){
 	splitIndex = eleveString.lastIndexOf("(");
 	name = eleveString.substring(eleveString,splitIndex-1);
 	classe = eleveString.substring(splitIndex+1,eleveString.length-1);
-	matieresData = JSON.parse(localStorage.getItem('matieresData'));
-	if(matieresData==null){
-			matieresData = {};
-	}
+	//coverageData = JSON.parse(localStorage.getItem('coverageData'));
+	//if(!coverageData){ coverageData={}; }
+	//matieresData = coverageData['matieresData'];
+	//if(matieresData==null){ matieresData = {}; }
+	lastDate = new Date(Date.now());
+	coverageData={};
+	matieresData = {};
 	// loop sur l'EDT du jour.
 	isDébutAnnée = false;
 	stopDate = new Date(Date.now()-3*1000*60*60*24);
-	lastDate="";
+	prevDate="";
 	while(!isDébutAnnée){
 		// date
 		dateString = edtNode.querySelector(".ObjetCelluleDate .ocb_cont .ocb-libelle").textContent;
-		date = new Date();
-		if(dateString=="Demain"){
-			date = new Date(1000*60*60*24 + Date.now());
-		} else if(dateString=="Aujourd'hui"){
-			date = new Date(Date.now());
-		} else {
-			dateString = dateString +" "+ new Date(Date.now()).getFullYear()
-			tempDate = new Date(dateString);
-			day = tempDate.getDate();
-			month = tempDate.getMonth();
-			year = new Date(Date.now()).getFullYear();
-			if(month>7) {
-				year = year - 1 
-			}
-			date = new Date(year, month, day);
-		}
-		jsonEDTData = getEDTduJour(edtNode, etablissement, adresse, classe, eleveString.hashCode(), date, matieresData);
-		console.log(jsonEDTData);
-		postEDTJson(jsonEDTData);
-		date = jsonEDTData["date"];
-		if(lastDate==date){
+		date = pronoteToLocalDate(dateString);
+		if(prevDate==date){
+			// si la date n'à pas changée, on à terminé.
 			isDébutAnnée = true
-		} else {
-			lastDate=date;
+		} else {		
+			prevDate=date;
+			jsonEDTData = getEDTduJour(edtNode, etablissement, adresse, classe, eleveString.hashCode(), date, matieresData);
+			console.log(jsonEDTData);
+			//postEDTJson(jsonEDTData);
+
 			// prevDay
 			prevButton = document.querySelector("#id_body .emploidutemps .ObjetCelluleDate .icon_angle_left");
 			prevButton.dispatchEvent(new Event("click"));
 			await delay(1000);
 		}
 	}
-	localStorage.setItem('matieresData', JSON.stringify(matieresData));
-	return matieresData;
+	coverageData["matieresData"] = matieresData;
+	coverageData["firstDate"] = firstDate;
+	covergaeData["lastDate"] = lastDate;
+	localStorage.setItem('coverageData', JSON.stringify(coverageData));
+	return coverageData;
 }
 /*
 document.addEventListener('readystatechange', () => {    

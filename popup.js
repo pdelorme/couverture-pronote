@@ -2,7 +2,7 @@ console.log('This is an other popup!');
 
 function displayResult(res){
 	console.log("result :", res);
-	matieresDataToTable(res);
+	displayCoverageData(res);
 }
 async function refresh(){
 	const [tab] = await chrome.tabs.query({active: true, lastFocusedWindow: true});
@@ -16,7 +16,7 @@ var refreshButton = document.getElementById("refreshButton");
 refreshButton.addEventListener(
   "click", () => refresh(), false);
 
-function matieresDataToTable(matiereJson){
+function displayCoverageData(matiereJson){
 	labelsCount = 0;
 	labels = {};
 	// construit la table des colonnes?
@@ -32,8 +32,16 @@ function matieresDataToTable(matiereJson){
    		}
    	}
  	}
+ 	startDiv = document.querySelector("#results-start");
+ 	sendDiv = document.querySelector("#results-end");
 	tableDiv = document.querySelector("#results-table");
-	
+	// détruit la table existante.
+	innerTable = tableDiv.querySelector("table")
+	if(innerTable){
+		innerTable.remove();
+	}
+
+	// ajoute la table.
 	const tableElement = document.createElement("table");
 	// header
 	headerElement = document.createElement("tr");
