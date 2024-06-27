@@ -8,7 +8,7 @@ Installation
 ------------
 1. telechargez le projet sur votre ordi.
 2. dans Chrome, allez à l'adresse suivante : chrome://extensions/
-3. Activez le mode developpeur (en hau à droite)
+3. Activez le mode developpeur (en haut à droite)
 4. Chargez l'extention non-empactée (selectionnez le dossier téléchargé en 1.)
 5. Allez sur pronot et authentifiez vous.
 6. Sans changer d'écran, allez sur l'extension "Couverture Pronote", un popup s'affiche.

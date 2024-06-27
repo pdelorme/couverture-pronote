@@ -4,10 +4,10 @@ chrome.runtime.onMessage.addListener(
   function(request, sender, sendResponse) {
   	console.log("Update stats");
   	(async () => {
-	  	coverageData = await getEDTAnnée();
-	    sendResponse(coverageData);
+	  	coverageData = await getEDTAnnée(sendResponse);
+	    // sendResponse(coverageData);
 	  })();
-	  return true;
+	  return false;
   }
 );
 
@@ -78,6 +78,9 @@ function pronoteToLocalDate(pronoteDate){
 	return date;
 }
 
+function goHome(){
+	adresseNode = document.querySelector(".fiche-etablissement.informations");
+}
 /**
  * return JSONData from current day
  */
@@ -150,6 +153,7 @@ async function getEDTAnnée(){
 	lastDate = null;
 	coverageData={};
 	matieresData = {};
+	coverageData["matieresData"] = matieresData;
 	// loop sur l'EDT du jour.
 	isDébutAnnée = false;
 	// stopDate = new Date(Date.now()-3*1000*60*60*24);
@@ -158,12 +162,15 @@ async function getEDTAnnée(){
 		// date
 		dateString = edtNode.querySelector(".ObjetCelluleDate .ocb_cont .ocb-libelle").textContent;
 		date = pronoteToLocalDate(dateString);
-		if(lastDate==null)
+		coverageData["startDate"] = date;	
+		if(lastDate==null){
 			lastDate=date;
+			coverageData["endDate"] = lastDate;
+		}
 		if(prevDate-date==0){
 			// si la date n'à pas changée, on à terminé.
 			isDébutAnnée = true
-		} else {		
+		} else {	
 			prevDate=date;
 			jsonEDTData = getEDTduJour(edtNode, etablissement, adresse, classe, eleveString.hashCode(), date, matieresData);
 			console.log(jsonEDTData);
@@ -172,12 +179,10 @@ async function getEDTAnnée(){
 			// prevDay
 			prevButton = document.querySelector("#id_body .emploidutemps .ObjetCelluleDate .icon_angle_left");
 			prevButton.dispatchEvent(new Event("click"));
+			await chrome.runtime.sendMessage({ command : "set", coverageData : coverageData });
 			await delay(500);
 		}
 	}
-	coverageData["matieresData"] = matieresData;
-	coverageData["startDate"] = date;
-	coverageData["endDate"] = lastDate;
 	return coverageData;
 }
 /*

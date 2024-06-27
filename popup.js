@@ -1,14 +1,47 @@
 console.log('This is an other popup!');
+
+// display data when opening popup.
 displayCoverageData();
 
-function displayResult(coverageData){
-    localStorage.setItem('coverageData', JSON.stringify(coverageData));
-	displayCoverageData();
+/**
+ * coef d'heure par label.
+ * 1 : heure faite
+ * -1 : heure non faite
+ * 0 : ne pas compter.
+ * total des heures = somme label(1) + somme label(-1)
+ * total des heures non faites = somme label(-1)
+ */
+labelsCoef = {
+    "-": 1,
+    "Classe absente": -1,
+    "Cours annul\u00E9":-1,
+    "Cours d\u00E9plac\u00E9":1, 
+    "Prof. absent":-1,
+    "Prof./pers. absent": -1,
+	"Changement de salle": 1,
+    "Cours modifi\u00E9":1,
+    "Dispense": -1,	
+    "Cours maintenu": 1,	
+    "Exceptionnel": 1,	
+    "Remplacement": 1,	
+    "Conseil de classe": 1
 }
+
+// update display during scraping.
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.command === 'set') {
+        coverageData = message.coverageData;
+        console.log("Received CoverageData", coverageData);
+        displayCoverageData(coverageData);
+        return false;
+    }
+  });
+
 async function refresh(){
-	const [tab] = await chrome.tabs.query({active: true, lastFocusedWindow: true});
-	// const response = await chrome.tabs.sendMessage(tab.id, {greeting: "hello"});
-	chrome.tabs.sendMessage(tab.id, {"message":"hello"}).then(res => displayResult(res));
+	const [tab] = await chrome.tabs.query({
+        url: [ "https://*.index-education.net/*"]}
+    );
+	chrome.tabs.sendMessage(tab.id, {command:"scrap"});
 }
 
 function replaceElementText(selector, text){
@@ -30,9 +63,17 @@ var refreshButton = document.getElementById("refreshButton");
 refreshButton.addEventListener(
   "click", () => refresh(), false);
 
-function displayCoverageData(){
-    coverageData = JSON.parse(localStorage.getItem('coverageData'));
+async function displayCoverageData(coverageData){
+    // coverageData = JSON.parse(localStorage.getItem('coverageData'));
     if(!coverageData){
+        object = await chrome.runtime.sendMessage({ command : "get" });
+        if(object){
+            coverageData=object.coverageData;
+        }
+        console.log("retrieved coverageData :", coverageData);
+    }
+    if(!coverageData){
+        console.log("No coverage Data");
         return;
     }
     matieresData=coverageData["matieresData"];
@@ -45,7 +86,7 @@ function displayCoverageData(){
             for(var labelKey in labelsJson){
                 if (labelsJson.hasOwnProperty(labelKey)) {
                     if(!labels[labelKey]){
-                        labels[labelKey]=labelsCount++;
+                        labels[labelKey]=0;
                     }
                 }
             }
@@ -65,12 +106,24 @@ function displayCoverageData(){
     headerElement.appendChild(thElement);
 	for(var label in labels){
 		thElement = document.createElement("th");
-   	headerElement.appendChild(thElement);
-   	labelElement = document.createTextNode(label);
-   	thElement.appendChild(labelElement);
+   	    headerElement.appendChild(thElement);
+   	    labelElement = document.createTextNode(label);
+   	    thElement.appendChild(labelElement);
 	}
-	// rows
+    thElement = document.createElement("th");
+    headerElement.appendChild(thElement);
+    labelElement = document.createTextNode("total");
+    thElement.appendChild(labelElement);
+    thElement = document.createElement("th");
+    headerElement.appendChild(thElement);
+    labelElement = document.createTextNode("% couv");
+    thElement.appendChild(labelElement);
+	totalLabelDone=0;
+    totalLabelUndone=0;
+    // rows
 	for (var key in matieresData) {
+        labelDone=0;
+        labelUndone=0;
         if (matieresData.hasOwnProperty(key)) {
             trElement = document.createElement("tr");
             tableElement.appendChild(trElement);
@@ -84,13 +137,53 @@ function displayCoverageData(){
                 td2Element = document.createElement("td");
                 trElement.appendChild(td2Element);
                 if(matiereLabels[label]){
-                    valueElement = document.createTextNode(matiereLabels[label]);
+                    matiereValue = matiereLabels[label];
+                    if(labelsCoef[label] === 1){
+                        labelDone+=matiereValue;
+                        totalLabelDone+=matiereValue;
+                    } else if(labelsCoef[label] === -1){
+                        labelUndone+=matiereValue;
+                        totalLabelUndone+=matiereValue;
+                    } else {
+                        console.log("label not found :",label);
+                    }
+                    labels[label]+=matiereValue;
+                    valueElement = document.createTextNode(matiereValue);
                     td2Element.appendChild(valueElement);
                 }
             }
+            tdTotalElement = document.createElement("td");
+            trElement.appendChild(tdTotalElement);
+            totalElement = document.createTextNode(""+(labelDone+labelUndone)+"|"+labelUndone);
+            tdTotalElement.appendChild(totalElement);
+            tdP100Element = document.createElement("td");
+            trElement.appendChild(tdP100Element);
+            p100Element = document.createTextNode(Math.trunc(labelDone/(labelDone+labelUndone)*100)+"%");
+            tdP100Element.appendChild(p100Element);
    	 	
 		}
 	}
+    trElement = document.createElement("tr");
+    tableElement.appendChild(trElement);
+    td1Element = document.createElement("td");
+    trElement.appendChild(td1Element);
+    totalElement = document.createTextNode("Total");
+    td1Element.appendChild(totalElement);
+    for(var label in labels){
+        td2Element = document.createElement("td");
+        trElement.appendChild(td2Element);
+        labelValue = labels[label];
+        valueElement = document.createTextNode(labelValue);
+        td2Element.appendChild(valueElement);
+    }
+    tdTotalElement = document.createElement("td");
+    trElement.appendChild(tdTotalElement);
+    totalElement = document.createTextNode(""+(totalLabelDone+totalLabelUndone)+"|"+totalLabelUndone);
+    tdTotalElement.appendChild(totalElement);
+    tdP100Element = document.createElement("td");
+    trElement.appendChild(tdP100Element);
+    p100Element = document.createTextNode(Math.trunc(totalLabelDone/(totalLabelDone+totalLabelUndone)*100)+"%");
+    tdP100Element.appendChild(p100Element);
 }
 
 /*
