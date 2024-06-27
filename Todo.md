@@ -1,33 +1,25 @@
 Todo
-----
+===
 
-Version 1
----------
-1. ~~selection du tab "pronote".~~
-3. ~~affichage des stats dans l'extention.~~
-5. ~~persister stats~~
-8. ~~nouveau logo.~~
-10. ~~publication extension~~
-13. ~~désynchroniser popup et page de scrap ->~~
-    - ~~le popup affiche les données les plus récentes~~
-    - ~~le scrap envoi les données au plugin eu fur et à mesure même si le popup est fermé.~~
-    - la page de scrap est bloquée jusqu'à la fin du scrap (sauf bouton stop).
-2. goto page TDM auto
-4. scrap plus rapide : dés que tdm dispo.
-6. ne parser que les dates non faites.
-7. corriger l'adresse de l'etablissement.
-9. ajouter "disclaimer"
-11. test en conditions réélles.
-12. formulaire google de prise en compte des retours.
+Extension
+---
+- Ajouter un spiner avec bouton stop sur la page en cours de scrap.
+- aller automatiquement sur page TDM à la synchro.
+- message d'alerte si page non trouvé ou non loggé.
+- scrap plus rapide : écouter la maj du DOM.
+- ne parser que les dates non faites.
+- corriger l'adresse de l'etablissement.
+- gérer les fratries et les accès élèves
+- gérer les version serveur selon établissement.
+
+Serveur
+---
+- dumper les post dans un fichier.
+- déployer le serveur sur vps lookal.
+- monter base mongo
+- dumper stats dans mongo
+- faire Page de stats serveur (par matiere, classes et établissement).
+- faire Cartographie (heatmap) des couverture (par matiere).
 
 
-
-Version 2
----------
-1. Envoi vers serveur
-2. Page de stats serveur (par matiere, classes et établissement).
-3. Cartographie (heatmap) des couverture (par matiere).
-4. Lien vers Carto.
-5. gérer les fratries et les accès élèves
-6. Prise ne compte des retours V1.
 
