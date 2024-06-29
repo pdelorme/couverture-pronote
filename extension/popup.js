@@ -1,8 +1,20 @@
-console.log('This is an other popup!');
+console.log('Bienvenue sur la console PronotoCoverage !');
 
-// display data when opening popup.
+// show pronote window.
+activatePronoteWindow();
+
+// display data on popup opening.
 displayCoverageData();
-
+scrapping=false;
+var actionButton = document.getElementById("actionButton");
+actionButton.addEventListener("click", () => actionClick(), false);
+function actionClick(){
+    if(this.scrapping){
+        stopScrapping();
+    } else {
+        startScrapping();
+    }
+}
 /**
  * coef d'heure par label.
  * 1 : heure faite
@@ -11,7 +23,7 @@ displayCoverageData();
  * total des heures = somme label(1) + somme label(-1)
  * total des heures non faites = somme label(-1)
  */
-labelsCoef = {
+const labelsCoef = {
     "-": 1,
     "Classe absente": -1,
     "Cours annul\u00E9":-1,
@@ -27,50 +39,74 @@ labelsCoef = {
     "Conseil de classe": 1
 }
 
-// update display during scraping.
+const matiereKO = [ "-","Documentation","Pas de cours","Evaluation nationale","Sortie p\u00E9dagogique"];
+
+// continuous update display during scraping.
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.command === 'set') {
+    if (message.command === 'setCoverageData') {
         coverageData = message.coverageData;
-        console.log("Received CoverageData", coverageData);
+        //console.log("Received CoverageData", coverageData);
         displayCoverageData(coverageData);
         return false;
     }
-  });
+    if(message.command === "contentReady"){
+        console.log("content-ready",this.refreshTabId);
+        //contentReady();
+    }
+  }
+);
 
-async function refresh(){
+async function activatePronoteWindow(){
 	const [tab] = await chrome.tabs.query({
         url: [ "https://*.index-education.net/*"]}
     );
-	chrome.tabs.sendMessage(tab.id, {command:"scrap"});
+    if(tab){
+        await chrome.tabs.update(tab.id, {active : true});
+        await chrome.tabs.reload(tab.id);
+        await delay(3000);
+        connected = await chrome.tabs.sendMessage(tab.id, {command:"isConnected"});
+        console.log("isConnected",connected);
+        if(!connected){
+            var actionButton = document.getElementById("actionButton");
+            actionButton.disabled=true;
+            replaceElementText(actionButton,"!!! Merci de vous connecter !!!");    
+        }
+    } else {
+        var actionButton = document.getElementById("actionButton");
+        actionButton.disabled=true;
+        replaceElementText(actionButton,"!!! Merci d'ouvrir pronote !!!");    
+    }
 }
 
-function replaceElementText(selector, text){
-    replaceElementChild(selector, document.createTextNode(text));
-}
-function replaceElementChild(selector, child){
-    element = document.querySelector(selector)
-    if(!element){
-        console.log("element does not exist :" + selector);
-        return;
-    }
-    while (element.firstChild) {
-        element.removeChild(element.firstChild);
-    }
-    element.appendChild(child);
+// trigers re-calculation of statistics.
+async function startScrapping(){
+    this.scrapping =true;
+	const [tab] = await chrome.tabs.query({
+        url: [ "https://*.index-education.net/*"]}
+    );
+    chrome.tabs.sendMessage(tab.id, {command:"startScrapping"});
+    var actionButton = document.getElementById("actionButton");
+    replaceElementText(actionButton,"Arr\u00EAter");
 }
 
-var refreshButton = document.getElementById("refreshButton");
-refreshButton.addEventListener(
-  "click", () => refresh(), false);
+async function stopScrapping(){
+    this.scrapping =false;
+	const [tab] = await chrome.tabs.query({
+        url: [ "https://*.index-education.net/*"]}
+    );
+    chrome.tabs.sendMessage(tab.id, {command:"stopScrapping"});
+    var actionButton = document.getElementById("actionButton");
+    replaceElementText(actionButton,"Rafraichir les statistiques");
+}
 
 async function displayCoverageData(coverageData){
     // coverageData = JSON.parse(localStorage.getItem('coverageData'));
     if(!coverageData){
-        object = await chrome.runtime.sendMessage({ command : "get" });
+        object = await chrome.runtime.sendMessage({ command : "getCoverageData" });
         if(object){
             coverageData=object.coverageData;
         }
-        console.log("retrieved coverageData :", coverageData);
+        // console.log("retrieved coverageData :", coverageData);
     }
     if(!coverageData){
         console.log("No coverage Data");
@@ -100,90 +136,97 @@ async function displayCoverageData(coverageData){
     replaceElementChild("#results_table", tableElement);
 
 	// header
-	headerElement = document.createElement("tr");
-    tableElement.appendChild(headerElement);
-    thElement = document.createElement("th");
-    headerElement.appendChild(thElement);
+	headerElement = addElement(tableElement, "tr");
+    addElement(headerElement,"th");
 	for(var label in labels){
-		thElement = document.createElement("th");
-   	    headerElement.appendChild(thElement);
-   	    labelElement = document.createTextNode(label);
-   	    thElement.appendChild(labelElement);
+		addElement(headerElement,"th",label);
 	}
-    thElement = document.createElement("th");
-    headerElement.appendChild(thElement);
-    labelElement = document.createTextNode("total");
-    thElement.appendChild(labelElement);
-    thElement = document.createElement("th");
-    headerElement.appendChild(thElement);
-    labelElement = document.createTextNode("% couv");
-    thElement.appendChild(labelElement);
+    addElement(headerElement,"th","Total");
+    addElement(headerElement,"th","Couverture");
+
 	totalLabelDone=0;
-    totalLabelUndone=0;
+    totalLabelAll=0;
     // rows
 	for (var key in matieresData) {
         labelDone=0;
-        labelUndone=0;
-        if (matieresData.hasOwnProperty(key)) {
-            trElement = document.createElement("tr");
-            tableElement.appendChild(trElement);
-            td1Element = document.createElement("td");
-            trElement.appendChild(td1Element);
-            labelElement = document.createTextNode(key);
-            td1Element.appendChild(labelElement);
+        labelAll=0;
+        if (matieresData.hasOwnProperty(key) && !matiereKO.includes(key)) {
+            trElement = addElement(tableElement, "tr");
+            addElement(trElement, "td", key);
             
             matiereLabels = matieresData[key];
             for(var label in labels){
-                td2Element = document.createElement("td");
-                trElement.appendChild(td2Element);
+                matiereValue="";
                 if(matiereLabels[label]){
                     matiereValue = matiereLabels[label];
                     if(labelsCoef[label] === 1){
                         labelDone+=matiereValue;
                         totalLabelDone+=matiereValue;
+                        labelAll+=matiereValue;
+                        totalLabelAll+=matiereValue;
                     } else if(labelsCoef[label] === -1){
-                        labelUndone+=matiereValue;
-                        totalLabelUndone+=matiereValue;
+                        labelAll+=matiereValue;
+                        totalLabelAll+=matiereValue;
                     } else {
                         console.log("label not found :",label);
                     }
                     labels[label]+=matiereValue;
-                    valueElement = document.createTextNode(matiereValue);
-                    td2Element.appendChild(valueElement);
                 }
+                addElement(trElement, "td", matiereValue);
             }
-            tdTotalElement = document.createElement("td");
-            trElement.appendChild(tdTotalElement);
-            totalElement = document.createTextNode(""+(labelDone+labelUndone)+"|"+labelUndone);
-            tdTotalElement.appendChild(totalElement);
-            tdP100Element = document.createElement("td");
-            trElement.appendChild(tdP100Element);
-            p100Element = document.createTextNode(Math.trunc(labelDone/(labelDone+labelUndone)*100)+"%");
-            tdP100Element.appendChild(p100Element);
-   	 	
+            addElement(trElement, "td", ""+labelDone+"/"+labelAll);
+            addElement(trElement, "td", Math.trunc(labelDone/labelAll*100)+"%");   	 	
 		}
 	}
-    trElement = document.createElement("tr");
-    tableElement.appendChild(trElement);
-    td1Element = document.createElement("td");
-    trElement.appendChild(td1Element);
-    totalElement = document.createTextNode("Total");
-    td1Element.appendChild(totalElement);
+    trElement = addElement(tableElement, "tr");
+    addElement(trElement, "th", "Total");
     for(var label in labels){
-        td2Element = document.createElement("td");
-        trElement.appendChild(td2Element);
         labelValue = labels[label];
-        valueElement = document.createTextNode(labelValue);
-        td2Element.appendChild(valueElement);
+        addElement(trElement, "th", labelValue);
     }
-    tdTotalElement = document.createElement("td");
-    trElement.appendChild(tdTotalElement);
-    totalElement = document.createTextNode(""+(totalLabelDone+totalLabelUndone)+"|"+totalLabelUndone);
-    tdTotalElement.appendChild(totalElement);
-    tdP100Element = document.createElement("td");
-    trElement.appendChild(tdP100Element);
-    p100Element = document.createTextNode(Math.trunc(totalLabelDone/(totalLabelDone+totalLabelUndone)*100)+"%");
-    tdP100Element.appendChild(p100Element);
+    addElement(trElement, "th", ""+totalLabelDone+"/"+totalLabelAll);
+    addElement(trElement, "th", Math.trunc(totalLabelDone/totalLabelAll*100)+"%");   	 	
+}
+
+/**
+ * DOM Utility methods
+ */
+function replaceElementText(elementOrSelector, text){
+    replaceElementChild(elementOrSelector, document.createTextNode(text));
+}
+function replaceElementChild(elementOrSelector, child){
+    if(typeof(elementOrSelector) === 'string' || elementOrSelector instanceof String ){
+        element = document.querySelector(elementOrSelector);
+    } else {
+        element = elementOrSelector;
+    }
+    if(!element){
+        console.log("element does not exist :" + selector);
+        return;
+    }
+    while (element.firstChild) {
+        element.removeChild(element.firstChild);
+    }
+    element.appendChild(child);
+}
+/**
+ * creates, attach to {root} and returns <{key}> element with {text} content.
+ * @returns the element <key>text</key>
+ */
+function addElement(root, key, text){
+    element = document.createElement(key);
+    root.appendChild(element);
+    if(text){
+        textElement = document.createTextNode(text);
+        element.appendChild(textElement);
+    }
+    return element;
+}
+
+function delay(milliseconds){
+    return new Promise(resolve => {
+        setTimeout(resolve, milliseconds);
+    });
 }
 
 /*

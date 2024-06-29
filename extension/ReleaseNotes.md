@@ -2,6 +2,19 @@ Release Notes
 =============
 Couverture Pronote, Extension Chrome
 
+v1.0.4 (29/06/2024)
+------
+1. fix bug affichage tableau
+2. correction affichage totaux par matières
+3. suppression matières invalide.
+4. correction des heures effectuées.
+
+v1.0.3 (29/06/2024)
+------
+1. rechargement auto de la page pronote à l'ouverture de l'extension.
+2. ajout d'un bouton stop.
+3. désactive le bouton si non connecté sur pronote.
+
 v1.0.2 (27/06/2024)
 ------
 1. selection auto du tab "pronote".

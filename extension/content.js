@@ -1,14 +1,36 @@
-console.log("Hello Pronote !");
+console.log("Bonjour Pronote !");
 
+this.scrapping = false;
 chrome.runtime.onMessage.addListener(
-  function(request, sender, sendResponse) {
-  	console.log("Update stats");
-  	(async () => {
-	  	coverageData = await getEDTAnnée(sendResponse);
-	    // sendResponse(coverageData);
-	  })();
-	  return false;
-  }
+  	function(message, sender, sendResponse) {
+		if(message.command === 'startScrapping'){
+			if(this.scrapping){
+				console.log("Already scrapping");
+				return;
+			}
+			console.log("start Scrapping");
+			this.scrapping = true;
+			(async () => {
+				coverageData = await getEDTAnnée(sendResponse);
+				// sendResponse(coverageData);
+			})();
+			return false;
+		}
+		if(message.command === 'stopScrapping'){
+			console.log("Stop");
+			this.scrapping = false;
+			return false;
+		}
+		if(message.command === "isConnected"){
+			console.log("isConnected");
+			(async () => {
+				isConnected = document.querySelector(".AvecMenuContextuel");
+				console.log("isConnected",isConnected);
+				sendResponse(isConnected);
+			})();
+			return true;
+		}
+	}
 );
 
 String.prototype.hashCode = function() {
@@ -81,6 +103,24 @@ function pronoteToLocalDate(pronoteDate){
 function goHome(){
 	adresseNode = document.querySelector(".fiche-etablissement.informations");
 }
+
+/**
+ * converts time from HHhMM to Décimal.
+ * @param {*} timeString 
+ * @returns 
+ */
+function getTimeToDec(timeString){
+	if(!timeString.includes("h"))
+		return parseFloat(timeString) / 60;
+	 const [h, m] = timeString.split("h");
+	 return (+h*60+ +m)/60;
+}
+
+function getDuration(heureDébut, heureFin){
+	if(heureFin === "")
+		return 1;
+	return getTimeToDec(heureFin)- getTimeToDec(heureDébut);
+}
 /**
  * return JSONData from current day
  */
@@ -99,7 +139,9 @@ function getEDTduJour(edtNode, etablissement, adresse, classe, eleveHash, date, 
 	    jsonSLOTData = {};
 	    heureNodes = liNode.querySelectorAll(".container-heures div");
 	    heureDebut = heureNodes[0].textContent;
-	    heureFin = heureNodes.length>1 ? heureNodes[1].textContent : "N/A";
+	    heureFin = heureNodes.length>1 ? heureNodes[1].textContent : "";
+		duration = getDuration(heureDebut,heureFin);
+
 	    matiereNode = liNode.querySelector("ul.container-cours>li.libelle-cours");
 	    matiere = matiereNode?(matiereNode.childNodes[0]?matiereNode.childNodes[0].textContent:"-"):"*";
 	    etiquetteNode = liNode.querySelector("ul.container-cours>li.container-etiquette")
@@ -113,16 +155,15 @@ function getEDTduJour(edtNode, etablissement, adresse, classe, eleveHash, date, 
 	    matiereData = matieresData[matiere];
 	    if(matiereData==null){
 	    	matiereData={};
-	    	matiereData[etiquette]=1;
 	    	matieresData[matiere]=matiereData;
-	    } else {
-	    	etiquetteCount = matiereData[etiquette];
-	    	if(etiquetteCount==null){
-	    		matiereData[etiquette]=1
-	    	} else {
-	    		matiereData[etiquette]=etiquetteCount+1
-	    	}
-	    }
+	    } 
+		etiquetteTime = matiereData[etiquette];
+		if(etiquetteTime==null){
+			matiereData[etiquette]=duration
+		} else {
+			matiereData[etiquette]=etiquetteTime+duration
+		}
+
 	}
 	jsonEDTData["slots"] = SLOTSData;
 	return jsonEDTData;
@@ -158,7 +199,7 @@ async function getEDTAnnée(){
 	isDébutAnnée = false;
 	// stopDate = new Date(Date.now()-3*1000*60*60*24);
 	prevDate = null;
-	while(!isDébutAnnée){
+	while(!isDébutAnnée && scrapping){
 		// date
 		dateString = edtNode.querySelector(".ObjetCelluleDate .ocb_cont .ocb-libelle").textContent;
 		date = pronoteToLocalDate(dateString);
@@ -179,12 +220,14 @@ async function getEDTAnnée(){
 			// prevDay
 			prevButton = document.querySelector("#id_body .emploidutemps .ObjetCelluleDate .icon_angle_left");
 			prevButton.dispatchEvent(new Event("click"));
-			await chrome.runtime.sendMessage({ command : "set", coverageData : coverageData });
+			await chrome.runtime.sendMessage({ command : "setCoverageData", coverageData : coverageData });
 			await delay(500);
 		}
 	}
 	return coverageData;
 }
+
+chrome.runtime.sendMessage({ command : "contentReady" });
 /*
 document.addEventListener('readystatechange', () => {    
   if (document.readyState == 'complete') {

@@ -22,3 +22,7 @@ table {
   text-align: center;
   border-collapse: collapse;
 }
+
+button {
+  width:100%
+}
