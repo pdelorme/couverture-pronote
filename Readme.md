@@ -18,3 +18,10 @@ Installation Developpeur
 2. dans Chrome, allez à l'adresse suivante : chrome://extensions/
 3. Activez le mode developpeur (en haut à droite)
 4. Chargez l'extention non-empactée (selectionnez le dossier téléchargé en 1.)
+
+Installation Serveur
+------------
+1. copier le fichier serveur_module_pronote.php sur votre serveur
+2. modifier les informations de connexion à votre base de données
+3. exécuter le fichier SQL sur votre base de données pour la mise en place des tables.
+ 
