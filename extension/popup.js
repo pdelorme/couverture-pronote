@@ -6,6 +6,8 @@ activatePronoteWindow();
 // display data on popup opening.
 displayCoverageData();
 scrapping=false;
+
+// wire action button
 var actionButton = document.getElementById("actionButton");
 actionButton.addEventListener("click", () => actionClick(), false);
 function actionClick(){
@@ -15,6 +17,19 @@ function actionClick(){
         startScrapping();
     }
 }
+// wire authorization box
+canPostData = false;
+var autorizationBox = document.getElementById("autorizationBox");
+autorizationBox.addEventListener("change", () => autorizationBoxChange(), false);
+function autorizationBoxChange(){
+    this.canPostData = document.getElementById("autorizationBox").checked;
+    message = "Aucune donn\u00E9es transmises.";
+    if(this.canPostData){
+        message = "Votre prochaine analyse sera transmises.";
+   }
+    replaceElementText(document.getElementById("autorizationMessage"), message);
+}
+
 /**
  * coef d'heure par label.
  * 1 : heure faite
@@ -84,7 +99,7 @@ async function startScrapping(){
 	const [tab] = await chrome.tabs.query({
         url: [ "https://*.index-education.net/*"]}
     );
-    chrome.tabs.sendMessage(tab.id, {command:"startScrapping"});
+    chrome.tabs.sendMessage(tab.id, {command:"startScrapping", postData:this.canPostData});
     var actionButton = document.getElementById("actionButton");
     replaceElementText(actionButton,"Arr\u00EAter");
 }

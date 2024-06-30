@@ -1,9 +1,12 @@
 console.log("Bonjour Pronote !");
 
 this.scrapping = false;
+this.postData = false;
+
 chrome.runtime.onMessage.addListener(
   	function(message, sender, sendResponse) {
 		if(message.command === 'startScrapping'){
+			this.postData = message.postData;
 			if(this.scrapping){
 				console.log("Already scrapping");
 				return;
@@ -49,17 +52,6 @@ function delay(milliseconds){
     return new Promise(resolve => {
         setTimeout(resolve, milliseconds);
     });
-}
-
-function postEDTJson(jsonEDTData){
-	return;
-	fetch("https://gcolpart.evolix.net/hde/pronote.php", {
-	  method: "POST",
-	  body: JSON.stringify(jsonEDTData),
-	  headers: {
-	    "Content-type": "application/json; charset=UTF-8"
-	  }
-	});
 }
 
 const monthMap = {
@@ -131,6 +123,9 @@ function getEDTduJour(edtNode, etablissement, adresse, classe, eleveHash, date, 
 	jsonEDTData["etablissement"] = etablissement;
 	jsonEDTData["adresse"] = adresse;
 	jsonEDTData["date"] = date.toLocaleDateString();
+	hostname = window.location.hostname;
+	uai=hostname.split(".")[0];
+	jsonEDTData["uai"]=uai;
 	// ligne d'emploi du temps.
 	liNodes = edtNode.querySelectorAll(".liste-cours>li");
 	SLOTSData = [];
@@ -148,8 +143,9 @@ function getEDTduJour(edtNode, etablissement, adresse, classe, eleveHash, date, 
 	    etiquette = etiquetteNode?etiquetteNode.textContent:"-"
 	    jsonSLOTData["heureDebut"] 	= heureDebut;
 	    jsonSLOTData["heureFin"] 	= heureFin;
-	    jsonSLOTData["matiere"] 	= matiereNode;
+	    jsonSLOTData["matiere"] 	= matiere;
 	    jsonSLOTData["etiquette"] 	= etiquette;
+		jsonSLOTData["duration"] 	= duration;
 	    SLOTSData.push(jsonSLOTData);
 	    // acumulates metrics
 	    matiereData = matieresData[matiere];
@@ -213,10 +209,10 @@ async function getEDTAnnée(){
 			isDébutAnnée = true
 		} else {	
 			prevDate=date;
-			jsonEDTData = getEDTduJour(edtNode, etablissement, adresse, classe, eleveString.hashCode(), date, matieresData);
-			console.log(jsonEDTData);
-			//postEDTJson(jsonEDTData);
-
+			edtData = getEDTduJour(edtNode, etablissement, adresse, classe, eleveString.hashCode(), date, matieresData);
+			if(this.postData){
+				await chrome.runtime.sendMessage({ command : "postEdtData", edtData : edtData });
+			}
 			// prevDay
 			prevButton = document.querySelector("#id_body .emploidutemps .ObjetCelluleDate .icon_angle_left");
 			prevButton.dispatchEvent(new Event("click"));

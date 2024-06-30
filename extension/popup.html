@@ -11,9 +11,16 @@
       <li>3. cliquez sur "Rafraichir les statistiques"</li>
       <li>4. Attendez que le plugin feuillette votre emploi du temps jusqu'au d&eacute;but de l'ann&eacute;e</li>
     </ul>
-    <button id="actionButton">Rafraichir les statistiques</button>
-    <div>date d&eacute;but : <span id="results_start"></span></div>
-    <div>date fin : <span id="results_end"></span></div>
+    <div id="actionDiv">
+      <button id="actionButton">Rafraichir les statistiques</button>
+      <p><input id="autorizationBox" type="checkbox"><b>J'autorise l'extension &agrave; envoyer les donn&eacute;es collect&eacute;es &agrave; data.nos-ecoles.fr</b> : <span id="autorizationMessage">Aucune donn&eacute;es transmises.</span><br/>
+        Ces donn&eacute;es sont utilis&eacute;e &agrave; usage de statistiques par &eacute;tablissement par le collectif Marseillais "nos &eacute;coles" et l'association "le Donut".
+        (Dans tous les cas, aucune donn&eacute;e personnelle ou identifiante n'est envoy&eacute;e)</p>
+    </div>
+    
+    <div>
+      <p>Donn&eacute;es collect&eacute;es entre le <b><span id="results_start"></span></b> et le <b><span id="results_end"></span></b></p>
+    </div>
     <div id="results_table"></div>
     <script src="popup.js"></script>
     

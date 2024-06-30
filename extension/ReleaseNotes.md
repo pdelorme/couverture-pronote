@@ -2,6 +2,11 @@ Release Notes
 =============
 Couverture Pronote, Extension Chrome
 
+v1.0.5 (30/06/2024)
+------
+1. ajout de l'envoi des données à data.nos-ecoles.fr
+2. ajout d'une checkbox d'autorisation d'envoi
+
 v1.0.4 (29/06/2024)
 ------
 1. fix bug affichage tableau

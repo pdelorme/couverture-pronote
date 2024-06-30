@@ -1,7 +1,7 @@
 {
   "name": "Couverture Pronote BETA",
   "description": "Calcule le taux de cours non remplacés de votre enfant. THIS EXTENSION IS FOR BÊTA TESTING",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "manifest_version": 3,
   "icons":{
     "128":"128.png"
@@ -11,7 +11,9 @@
     "default_icon": "pronote-favicon.png"
   },
   "host_permissions": [
-      "https://*.index-education.net/*"
+      "https://*.index-education.net/*",
+      "http://localhost:3000/*",
+      "https://data.nos-ecoles.fr/"
   ],
   "background": {
     "service_worker": "service-worker.js"
