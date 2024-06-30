@@ -4,6 +4,8 @@ Ce repos contient une extention Chrome dont le but est de calculer le taux de no
 
 Il à été réalisé dans le cadre du hackathon des écoles organisé par le Donut le weekend du 14-15-16 juin 2024.
 
+Les données sont envoyées sur https://data.nos-ecoles.fr/server_module_pronote.php, la page de restitution est en cours.
+
 Installation Utilisateur
 --------------
 1. allez sur la page https://chromewebstore.google.com/detail/epkkeanibfjhlkoemcdfklbhegljidgd/preview?hl=fr&authuser=0
