@@ -12,7 +12,6 @@
   },
   "host_permissions": [
       "https://*.index-education.net/*",
-      "http://localhost:3000/*",
       "https://data.nos-ecoles.fr/"
   ],
   "background": {
