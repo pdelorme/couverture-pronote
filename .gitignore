@@ -1,4 +1,4 @@
 server/node_modules/*
 server/package-lock.json
-extension/PronoteCoverage.zip
+extension/*.zip
 server/data/*
