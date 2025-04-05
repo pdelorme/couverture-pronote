@@ -187,20 +187,20 @@ async function displayCoverageData(coverageData){
                     }
                     labels[label]+=matiereValue;
                 }
-                addElement(trElement, "td", matiereValue);
+                addElement(trElement, "td", Math.round(matiereValue*100)/100);
             }
-            addElement(trElement, "td", ""+labelDone+"/"+labelAll);
-            addElement(trElement, "td", Math.trunc(labelDone/labelAll*100)+"%");   	 	
+            addElement(trElement, "td", ""+Math.round(labelDone*100)/100+"/"+Math.round(labelAll*100)/100);
+            addElement(trElement, "td", Math.round(labelDone/labelAll*100)+"%");   	 	
 		}
 	}
     trElement = addElement(tableElement, "tr");
     addElement(trElement, "th", "Total");
     for(var label in labels){
         labelValue = labels[label];
-        addElement(trElement, "th", labelValue);
+        addElement(trElement, "th", Math.round(labelValue*100)/100);
     }
-    addElement(trElement, "th", ""+totalLabelDone+"/"+totalLabelAll);
-    addElement(trElement, "th", Math.trunc(totalLabelDone/totalLabelAll*100)+"%");   	 	
+    addElement(trElement, "th", ""+Math.round(totalLabelDone*100)/100+"/"+Math.round(totalLabelAll)*100/100);
+    addElement(trElement, "th", Math.round(totalLabelDone/totalLabelAll*100)+"%");   	 	
 }
 
 /**
